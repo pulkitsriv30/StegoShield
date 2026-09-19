@@ -78,19 +78,19 @@ export function DashboardPage(currentUserData, activeTab) {
                     ${renderIcon('Download')} Public Gallery
                 </button>
 
-                <div class="mt-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2">Analysis Tools</div>
-                <button onclick="window.setActiveTab('classifier')" class="nav-btn ${activeTab === 'classifier' ? 'active' : ''}">
-                    ${renderIcon('Brain')} AI Steganalysis
+                <div class="mt-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2">Stego & Crypto Tools</div>
+                <button onclick="window.setActiveTab('encode')" class="nav-btn ${activeTab === 'encode' ? 'active' : ''}">
+                    ${renderIcon('Lock')} Encrypt & Hide
                 </button>
                 <button onclick="window.setActiveTab('decode')" class="nav-btn ${activeTab === 'decode' ? 'active' : ''}">
                     ${renderIcon('Unlock')} Decrypt Tool
                 </button>
+                <button onclick="window.setActiveTab('classifier')" class="nav-btn ${activeTab === 'classifier' ? 'active' : ''}">
+                    ${renderIcon('Brain')} AI Steganalysis
+                </button>
 
                 ${isAdmin ? `
                 <div class="mt-6 text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 px-2">Administration</div>
-                <button onclick="window.setActiveTab('encode')" class="nav-btn ${activeTab === 'encode' ? 'active' : ''}">
-                    ${renderIcon('Lock')} Encode & Publish
-                </button>
                 <button onclick="window.setActiveTab('admin')" class="nav-btn ${activeTab === 'admin' ? 'active' : ''}">
                     ${renderIcon('Settings')} Admin Controls
                 </button>` : ''}
@@ -117,10 +117,13 @@ export function DashboardPage(currentUserData, activeTab) {
         <main class="flex-1 flex flex-col overflow-hidden relative bg-slate-950" id="tab-content"></main>
 
         <div class="md:hidden bg-slate-900 border-t border-slate-800 flex justify-around p-3 shrink-0 fixed bottom-0 w-full z-50">
-            <button onclick="window.setActiveTab('chat')" class="${activeTab === 'chat' ? 'text-blue-500' : 'text-slate-500'}">${renderIcon('MessageSquare')}</button>
-            <button onclick="window.setActiveTab('downloads')" class="${activeTab === 'downloads' ? 'text-blue-500' : 'text-slate-500'}">${renderIcon('Download')}</button>
-            <button onclick="window.setActiveTab('decode')" class="${activeTab === 'decode' ? 'text-blue-500' : 'text-slate-500'}">${renderIcon('Unlock')}</button>
-            <button onclick="window.handleLogout()" class="text-red-500">${renderIcon('LogOut')}</button>
+            <button onclick="window.setActiveTab('chat')" class="${activeTab === 'chat' ? 'text-blue-500' : 'text-slate-500'}" title="Chat">${renderIcon('MessageSquare')}</button>
+            <button onclick="window.setActiveTab('downloads')" class="${activeTab === 'downloads' ? 'text-blue-500' : 'text-slate-500'}" title="Gallery">${renderIcon('Download')}</button>
+            <button onclick="window.setActiveTab('encode')" class="${activeTab === 'encode' ? 'text-blue-500' : 'text-slate-500'}" title="Encrypt">${renderIcon('Lock')}</button>
+            <button onclick="window.setActiveTab('decode')" class="${activeTab === 'decode' ? 'text-blue-500' : 'text-slate-500'}" title="Decrypt">${renderIcon('Unlock')}</button>
+            <button onclick="window.setActiveTab('classifier')" class="${activeTab === 'classifier' ? 'text-blue-500' : 'text-slate-500'}" title="AI Stego">${renderIcon('Brain')}</button>
+            ${isAdmin ? `<button onclick="window.setActiveTab('admin')" class="${activeTab === 'admin' ? 'text-amber-400' : 'text-slate-500'}" title="Admin">${renderIcon('Settings')}</button>` : ''}
+            <button onclick="window.handleLogout()" class="text-red-500" title="Logout">${renderIcon('LogOut')}</button>
         </div>
     </div>`;
 }

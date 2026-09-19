@@ -2,3 +2,6 @@ node_modules/
 .env.local
 .env
 *.env
+data/
+.DS_Store
+

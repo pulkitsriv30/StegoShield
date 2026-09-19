@@ -32,8 +32,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(bodyParser.json({ limit: '5mb' }));
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '25mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '25mb' }));
 
 // Serve static files (index.html, main.js, etc.)
 app.use(express.static(path.join(__dirname)));
@@ -59,7 +59,21 @@ app.all('/api/auth', async (req, res) => {
     }
 });
 
+import { exec } from 'child_process';
+
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Local server running at http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    const url = `http://localhost:${port}`;
+    console.log(`\n==================================================`);
+    console.log(`  StegoShield Secure Server Started Successfully!`);
+    console.log(`  > Local:   http://localhost:${port}`);
+    console.log(`  > IPv4:    http://127.0.0.1:${port}`);
+    console.log(`==================================================\n`);
+    
+    // Auto-open browser
+    const startCmd = process.platform === 'win32' ? `start ${url}` :
+                     process.platform === 'darwin' ? `open ${url}` : `xdg-open ${url}`;
+    exec(startCmd, (err) => {
+        if (err) console.log(`Open in your browser: ${url}`);
+    });
 });

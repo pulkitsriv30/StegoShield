@@ -26,12 +26,12 @@ async function apiCall(method, collectionName, params = {}) {
         }
         const response = await fetch(url, options);
         if (!response.ok) {
-            const err = await response.json();
-            throw new Error(err.error || "API Request Failed");
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.error || `Server request failed (${response.status})`);
         }
         return await response.json();
     } catch (error) {
-        console.error("API Error", error);
+        console.error(`[DB Error ${method} ${collectionName}]:`, error.message);
         if (method === 'GET') return [];
         throw error;
     }
@@ -52,10 +52,15 @@ export const DB = {
     },
     async checkUsername(username) {
         // Check both approved users and the pending-approval queue.
-        const users = await apiCall('GET', 'users', { where: { username } });
-        if (users.length > 0) return true;
-        const pending = await apiCall('GET', 'pending', { where: { username } });
-        return pending.length > 0;
+        try {
+            const users = await apiCall('GET', 'users', { where: { username } });
+            if (users && users.length > 0) return true;
+            const pending = await apiCall('GET', 'pending', { where: { username } });
+            return Boolean(pending && pending.length > 0);
+        } catch (e) {
+            console.warn('Error checking username:', e);
+            return false;
+        }
     },
     async createUser(userData) {
         // New signups go to "pending" until an admin approves them.
@@ -70,14 +75,43 @@ export const DB = {
         return await apiCall('GET', 'pending', {});
     },
     async approveUser(userId) {
-        // Move a user from "pending" into "users" with isVerified: true.
-        const pendingUsers = await apiCall('GET', 'pending', { where: { _id: userId } });
-        if (!pendingUsers.length) throw new Error('User not found');
+        // Find user by _id or id in pending collection
+        let pendingUsers = await apiCall('GET', 'pending', { where: { _id: userId } });
+        if (!pendingUsers || !pendingUsers.length) {
+            // Fallback: search all pending in case of ID field discrepancy
+            const allPending = await apiCall('GET', 'pending', {});
+            pendingUsers = allPending.filter(u => String(u._id) === String(userId) || String(u.id) === String(userId));
+        }
+        if (!pendingUsers.length) throw new Error('User not found in pending list');
+        
         const user = pendingUsers[0];
-        const { _id, ...rest } = user;
-        await apiCall('POST', 'users', { action: 'insert', payload: { ...rest, isVerified: true } });
-        await apiCall('POST', 'pending', { action: 'delete', payload: { _id: userId } });
+        const targetId = user._id || user.id || userId;
+        const { _id, id, ...userData } = user;
+        
+        // Insert into verified users
+        await apiCall('POST', 'users', {
+            action: 'insert',
+            payload: { ...userData, isVerified: true, approvedAt: Date.now() }
+        });
+        
+        // Remove from pending
+        await apiCall('POST', 'pending', {
+            action: 'delete',
+            payload: { _id: targetId, id: targetId }
+        });
         return true;
+    },
+    async rejectUser(userId) {
+        return await apiCall('POST', 'pending', {
+            action: 'delete',
+            payload: { _id: userId, id: userId }
+        });
+    },
+    async deleteUser(userId) {
+        return await apiCall('POST', 'users', {
+            action: 'delete',
+            payload: { _id: userId, id: userId }
+        });
     },
     async getVerifiedUsers() {
         return await apiCall('GET', 'users', { where: { isVerified: true } });
@@ -99,11 +133,13 @@ export const DB = {
         return s.length ? s[0] : null;
     },
     async updateSettings(id, newPass) {
-        // No settings document exists yet on a fresh DB — create one instead
-        // of trying (and failing) to update a document that doesn't exist.
         if (!id) {
             return await apiCall('POST', 'settings', { action: 'insert', payload: { decodePassword: newPass } });
         }
-        return await apiCall('POST', 'settings', { action: 'update', payload: { id: id, updateData: { decodePassword: newPass } } });
+        return await apiCall('POST', 'settings', {
+            action: 'update',
+            payload: { id: id, _id: id, updateData: { decodePassword: newPass } }
+        });
     }
 };
+
