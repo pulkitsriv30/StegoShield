@@ -3,16 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-let MongoClient = null;
-let ObjectId = null;
-
-try {
-    const mongoModule = await import('mongodb');
-    MongoClient = mongoModule.MongoClient;
-    ObjectId = mongoModule.ObjectId;
-} catch (e) {
-    console.warn('[DB] mongodb package not available in this environment');
-}
+import { MongoClient, ObjectId } from 'mongodb';
 
 const uri = process.env.MONGODB_URI;
 let cachedClient = null;
@@ -68,9 +59,9 @@ async function getDatabase() {
     if (useLocalDb) return { type: 'local' };
     if (cachedClient && cachedDb) return { type: 'mongo', db: cachedDb };
 
-    if (!uri || !MongoClient) {
+    if (!uri) {
         if (process.env.VERCEL) {
-            throw new Error("MONGODB_URI environment variable is missing. On Vercel, please set MONGODB_URI in your Vercel Project Settings -> Environment Variables.");
+            throw new Error("MONGODB_URI environment variable is missing on Vercel. Please set MONGODB_URI in Vercel Project Settings -> Environment Variables and Redeploy.");
         }
         console.log('[DB] MONGODB_URI not provided. Using local persistent JSON database (data/db.json).');
         useLocalDb = true;
@@ -89,6 +80,9 @@ async function getDatabase() {
         console.log(`[DB] Connected to MongoDB Atlas (${dbName}).`);
         return { type: 'mongo', db };
     } catch (err) {
+        if (process.env.VERCEL) {
+            throw new Error(`Failed to connect to MongoDB Atlas: ${err.message}. Please verify: 1) MongoDB Atlas -> Network Access allows 0.0.0.0/0, 2) MONGODB_URI username and password are correct (no angle brackets, special characters URL-encoded).`);
+        }
         console.warn(`[DB] Could not connect to MongoDB Atlas (${err.message}). Falling back to local JSON database.`);
         useLocalDb = true;
         return { type: 'local' };

@@ -32,7 +32,6 @@ async function apiCall(method, collectionName, params = {}) {
         return await response.json();
     } catch (error) {
         console.error(`[DB Error ${method} ${collectionName}]:`, error.message);
-        if (method === 'GET') return [];
         throw error;
     }
 }
@@ -59,7 +58,7 @@ export const DB = {
             return Boolean(pending && pending.length > 0);
         } catch (e) {
             console.warn('Error checking username:', e);
-            return false;
+            throw e;
         }
     },
     async createUser(userData) {
