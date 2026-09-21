@@ -97,3 +97,12 @@ server.js          Local Express server that serves static files + mounts api/db
 - Passwords are stored and compared in plaintext — fine for a demo, not for production.
 - Chat is poll-based, not real-time — up to a 3s delay.
 - No pagination on gallery/messages (capped at 500 docs server-side).
+
+## Deployment (Vercel)
+
+1. Connect the repository to Vercel.
+2. In Project Settings -> Environment Variables, configure:
+   - `MONGODB_URI`: MongoDB Atlas connection string (e.g. `mongodb+srv://user:pass@cluster.mongodb.net/stegosecure?retryWrites=true&w=majority&authSource=admin`)
+   - `ADMIN_USERNAME`: `admin`
+   - `ADMIN_PASSWORD`: Your secret admin password
+3. Network Access in MongoDB Atlas must allow `0.0.0.0/0` (Allow from Anywhere).
